@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Config } from '../src/config.js';
 import { clearStructureCache } from '../src/namespace.js';
-import { addMultipleTranslations, addTranslation, deleteTranslation, getTranslations } from '../src/tools.js';
+import { addMultipleTranslations, addTranslation, checkTranslationIntegrity, deleteTranslation, getTranslations } from '../src/tools.js';
 
 let tmpDir: string;
 let config: Config;
@@ -152,6 +152,41 @@ describe('deleteTranslation', () => {
 
   it('returns isError for unknown namespace', () => {
     const result = deleteTranslation(config, 'unknown', 'key');
+    expect(result.isError).toBe(true);
+  });
+});
+
+describe('checkTranslationIntegrity', () => {
+  it('returns no issues for a complete namespace', () => {
+    const result = checkTranslationIntegrity(config, 'common');
+    const report = JSON.parse(result.content[0].text);
+    expect(report['common'].missingKeys).toEqual({});
+    expect(report['common'].extraKeys).toEqual({});
+    expect(report['common'].emptyValues).toEqual({});
+  });
+
+  it('detects missing keys in non-primary locales', () => {
+    addTranslation(config, 'common', 'new.key', { en: 'English only' });
+    const result = checkTranslationIntegrity(config, 'common');
+    const report = JSON.parse(result.content[0].text);
+    expect(report['common'].missingKeys['de']).toContain('new.key');
+  });
+
+  it('detects empty values in non-primary locales', () => {
+    addTranslation(config, 'common', 'empty.key', { en: 'Has value', de: '' });
+    const result = checkTranslationIntegrity(config, 'common');
+    const report = JSON.parse(result.content[0].text);
+    expect(report['common'].emptyValues['de']).toContain('empty.key');
+  });
+
+  it('checks all namespaces when namespace is omitted', () => {
+    const result = checkTranslationIntegrity(config);
+    const report = JSON.parse(result.content[0].text);
+    expect(report['common']).toBeDefined();
+  });
+
+  it('returns isError for unknown namespace', () => {
+    const result = checkTranslationIntegrity(config, 'unknown');
     expect(result.isError).toBe(true);
   });
 });

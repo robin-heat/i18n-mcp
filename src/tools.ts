@@ -127,3 +127,48 @@ export function deleteTranslation(config: Config, namespace: string, key: string
 
   return ok(`Deleted key '${key}' from ${locales.length} locale(s)`);
 }
+
+export function checkTranslationIntegrity(config: Config, namespace?: string): ToolResult {
+  const namespaces = namespace
+    ? config.namespaces.filter(n => n.name === namespace)
+    : config.namespaces;
+
+  if (namespace && namespaces.length === 0) {
+    return err(`Namespace '${namespace}' not found. Available: ${config.namespaces.map(n => n.name).join(', ')}`);
+  }
+
+  const report: Record<string, {
+    missingKeys: Record<string, string[]>;
+    extraKeys: Record<string, string[]>;
+    emptyValues: Record<string, string[]>;
+  }> = {};
+
+  for (const ns of namespaces) {
+    const structure = detectStructure(ns.path, config.primaryLocale);
+    const locales = listLocales(ns.path, structure);
+    const primaryFlat = flattenKeys(readLocale(ns.path, config.primaryLocale, structure));
+    const primaryKeys = new Set(Object.keys(primaryFlat));
+
+    const missingKeys: Record<string, string[]> = {};
+    const extraKeys: Record<string, string[]> = {};
+    const emptyValues: Record<string, string[]> = {};
+
+    for (const locale of locales) {
+      if (locale === config.primaryLocale) continue;
+      const localeFlat = flattenKeys(readLocale(ns.path, locale, structure));
+      const localeKeys = new Set(Object.keys(localeFlat));
+
+      const missing = [...primaryKeys].filter(k => !localeKeys.has(k));
+      const extra = [...localeKeys].filter(k => !primaryKeys.has(k));
+      const empty = [...primaryKeys].filter(k => localeKeys.has(k) && !localeFlat[k]);
+
+      if (missing.length) missingKeys[locale] = missing;
+      if (extra.length) extraKeys[locale] = extra;
+      if (empty.length) emptyValues[locale] = empty;
+    }
+
+    report[ns.name] = { missingKeys, extraKeys, emptyValues };
+  }
+
+  return ok(JSON.stringify(report, null, 2));
+}
