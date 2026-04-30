@@ -56,4 +56,13 @@ describe('readConfigFromPath', () => {
     writeFileSync(configPath, JSON.stringify({ namespaces: [] }));
     expect(() => readConfigFromPath(configPath)).toThrow('Invalid');
   });
+
+  it('throws if a namespace path escapes the project directory', () => {
+    const configPath = join(tmpDir, '.i18n-mcp.json');
+    writeFileSync(configPath, JSON.stringify({
+      primaryLocale: 'en',
+      namespaces: [{ name: 'evil', description: 'test', path: '../../etc' }],
+    }));
+    expect(() => readConfigFromPath(configPath)).toThrow('escapes the project directory');
+  });
 });

@@ -55,6 +55,14 @@ describe('setNestedValue', () => {
     expect(() => setNestedValue({ button: { save: 'Save' } }, 'button', 'X'))
       .toThrow("Cannot set 'button': would overwrite object subtree at 'button'");
   });
+
+  it('throws on __proto__ key segment', () => {
+    expect(() => setNestedValue({}, '__proto__.polluted', 'yes')).toThrow('reserved property name');
+  });
+
+  it('throws on constructor key segment', () => {
+    expect(() => setNestedValue({}, 'a.constructor.b', 'yes')).toThrow('reserved property name');
+  });
 });
 
 describe('deleteNestedKey', () => {
