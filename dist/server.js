@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+import { runInstall } from './install.js';
+if (process.argv[2] === 'install') {
+    runInstall();
+    process.exit(0);
+}
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';

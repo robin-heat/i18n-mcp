@@ -6,36 +6,16 @@ Works with monorepos. Supports both flat (`en.json`) and i18next folder (`en/tra
 
 ## Quick Start
 
-### 1. Install the setup skill
-
-Copy `skills/i18n-setup.md` to your Claude Code plugins directory:
+Run this once in your project root:
 
 ```bash
-mkdir -p ~/.claude/plugins/i18n-mcp/skills
-cp node_modules/i18n-mcp/skills/*.md ~/.claude/plugins/i18n-mcp/skills/
+npx @robinheat/i18n-mcp install
 ```
 
-Or manually download from this repo.
+This installs the Claude Code skills and adds the MCP server to your project's `.claude/settings.json`. Then:
 
-### 2. Run setup in your project
-
-Open Claude Code in your project and run:
-
-```
-/i18n-setup
-```
-
-The skill will:
-- Auto-detect your translation files
-- Sample existing translations to infer tone and brand terms
-- Ask you to confirm the detected configuration
-- Write `.i18n-mcp.json` to your project root
-- Add the MCP server to `.claude/settings.json`
-- Append a context snippet to your `CLAUDE.md`
-
-### 3. Restart Claude Code
-
-The MCP server starts automatically on next launch.
+1. **Restart Claude Code**
+2. **Run `/i18n-setup`** — auto-detects your translation files, infers tone and brand terms, writes `.i18n-mcp.json`
 
 ## Configuration
 
