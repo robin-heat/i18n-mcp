@@ -40,6 +40,16 @@ describe('setNestedValue', () => {
     setNestedValue(obj, 'button.save', 'New');
     expect(obj.button.save).toBe('Old');
   });
+
+  it('throws when intermediate path segment is a scalar', () => {
+    expect(() => setNestedValue({ button: 'Save' }, 'button.cancel', 'Cancel'))
+      .toThrow("Cannot set 'button.cancel': 'button' is not a plain object");
+  });
+
+  it('throws when intermediate path segment is an array', () => {
+    expect(() => setNestedValue({ items: ['a', 'b'] }, 'items.first', 'A'))
+      .toThrow("Cannot set 'items.first': 'items' is not a plain object");
+  });
 });
 
 describe('deleteNestedKey', () => {
@@ -62,5 +72,10 @@ describe('deleteNestedKey', () => {
     const obj = { button: { save: 'Save' } };
     deleteNestedKey(obj, 'button.save');
     expect(obj.button.save).toBe('Save');
+  });
+
+  it('returns unchanged object when intermediate segment is an array', () => {
+    const obj = { items: ['a', 'b'], other: 'value' };
+    expect(deleteNestedKey(obj, 'items.first')).toEqual(obj);
   });
 });

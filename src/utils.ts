@@ -21,7 +21,12 @@ export function setNestedValue(
   let current: Record<string, unknown> = result;
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
-    current[part] = typeof current[part] === 'object' && current[part] !== null
+    if (current[part] !== undefined && (typeof current[part] !== 'object' || current[part] === null || Array.isArray(current[part]))) {
+      throw new Error(
+        `Cannot set '${dottedPath}': '${part}' is not a plain object`
+      );
+    }
+    current[part] = typeof current[part] === 'object' && current[part] !== null && !Array.isArray(current[part])
       ? { ...(current[part] as Record<string, unknown>) }
       : {};
     current = current[part] as Record<string, unknown>;
@@ -39,7 +44,7 @@ export function deleteNestedKey(
   let current: Record<string, unknown> = result;
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
-    if (typeof current[part] !== 'object' || current[part] === null) return result;
+    if (typeof current[part] !== 'object' || current[part] === null || Array.isArray(current[part])) return result;
     current[part] = { ...(current[part] as Record<string, unknown>) };
     current = current[part] as Record<string, unknown>;
   }
