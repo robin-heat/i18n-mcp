@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Config } from '../src/config.js';
 import { clearStructureCache } from '../src/namespace.js';
-import { addTranslation, getTranslations } from '../src/tools.js';
+import { addMultipleTranslations, addTranslation, getTranslations } from '../src/tools.js';
 
 let tmpDir: string;
 let config: Config;
@@ -94,6 +94,37 @@ describe('addTranslation', () => {
 
   it('returns isError for unknown namespace', () => {
     const result = addTranslation(config, 'unknown', 'key', { en: 'val' });
+    expect(result.isError).toBe(true);
+  });
+});
+
+describe('addMultipleTranslations', () => {
+  it('adds multiple keys in one operation', () => {
+    addMultipleTranslations(config, 'common', [
+      { key: 'form.submit', translations: { en: 'Submit', de: 'Absenden' } },
+      { key: 'form.reset', translations: { en: 'Reset', de: 'Zurücksetzen' } },
+    ]);
+    const result = getTranslations(config, 'common', 'form.*');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['form.submit']).toEqual({ en: 'Submit', de: 'Absenden' });
+    expect(data['form.reset']).toEqual({ en: 'Reset', de: 'Zurücksetzen' });
+  });
+
+  it('both keys exist after single batch write', () => {
+    addMultipleTranslations(config, 'common', [
+      { key: 'a', translations: { en: 'A' } },
+      { key: 'b', translations: { en: 'B' } },
+    ]);
+    const result = getTranslations(config, 'common');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['a']['en']).toBe('A');
+    expect(data['b']['en']).toBe('B');
+  });
+
+  it('returns isError for unknown namespace', () => {
+    const result = addMultipleTranslations(config, 'unknown', [
+      { key: 'k', translations: { en: 'v' } },
+    ]);
     expect(result.isError).toBe(true);
   });
 });

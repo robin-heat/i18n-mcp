@@ -1,7 +1,7 @@
 import { minimatch } from 'minimatch';
 import { Config } from './config.js';
 import { detectStructure, FileStructure, listLocales, readLocale, writeLocale } from './namespace.js';
-import { flattenKeys, setNestedValue } from './utils.js';
+import { deleteNestedKey, flattenKeys, setNestedValue } from './utils.js';
 
 export type ToolResult = {
   content: Array<{ type: 'text'; text: string }>;
@@ -82,4 +82,35 @@ export function addTranslation(
   }
 
   return ok(`Added key '${key}' for locales: ${Object.keys(translations).join(', ')}`);
+}
+
+export function addMultipleTranslations(
+  config: Config,
+  namespace: string,
+  entries: Array<{ key: string; translations: Record<string, string> }>
+): ToolResult {
+  const ns = resolveNamespace(config, namespace);
+  if (!ns) return namespaceNotFound(config, namespace);
+
+  const allLocales = new Set<string>();
+  for (const { translations } of entries) {
+    for (const locale of Object.keys(translations)) allLocales.add(locale);
+  }
+
+  const localeData: Record<string, Record<string, unknown>> = {};
+  for (const locale of allLocales) {
+    localeData[locale] = readLocale(ns.path, locale, ns.structure);
+  }
+
+  for (const { key, translations } of entries) {
+    for (const [locale, value] of Object.entries(translations)) {
+      localeData[locale] = setNestedValue(localeData[locale], key, value);
+    }
+  }
+
+  for (const locale of allLocales) {
+    writeLocale(ns.path, locale, ns.structure, localeData[locale]);
+  }
+
+  return ok(`Added ${entries.length} key(s) for locales: ${Array.from(allLocales).join(', ')}`);
 }
