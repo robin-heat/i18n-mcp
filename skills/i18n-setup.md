@@ -21,32 +21,64 @@ Group results by parent directory. For each unique directory, determine the file
 
 Propose a namespace name from the directory path (e.g. `apps/web/locales` → `web`).
 
-## Step 2: Sample existing translations for style detection
+## Step 2: Check documentation for explicit style guidance
 
-For each detected namespace, read up to 30 translation values from all locale files. Analyse:
+Before analysing translations, look for explicit style guidance in the project:
 
-- **Formality:** Does German use "du" or "Sie"? Does French use "tu" or "vous"?
-- **Brand terms:** Which words appear identically across every locale (not translated)?
-- **Do-not-translate terms:** Technical abbreviations, product names, acronyms
+- Read `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`, `docs/style-guide.md` (whichever exist)
+- Search for i18n config files: `i18n.config.*`, `i18next.config.*`, `lingui.config.*`
+- Check any `docs/` or `.github/` folder for tone/style mentions
 
-## Step 3: Present findings and ask for confirmation
+If any document explicitly states the tone (e.g. "use informal language", "address users as Sie"), use that — it overrides translation-based inference.
 
-Show a summary and ask the user to confirm or edit before writing anything:
+## Step 3: Analyse ALL translations for style detection
+
+Read **every value** across all locale files (not just a sample). For each locale, count explicit formality markers:
+
+**German formality markers:**
+- Informal signals: `du`, `dich`, `dir`, `dein`, `deine`, `deinen`, `deinem`, `deiner`
+- Formal signals: `Sie`, `Ihnen`, `Ihr`, `Ihre`, `Ihren`, `Ihrem`, `Ihrer`
+
+**French formality markers:**
+- Informal signals: `tu`, `toi`, `te`, `ton`, `ta`, `tes`
+- Formal signals: `vous`, `votre`, `vos`
+
+**Spanish formality markers:**
+- Informal signals: `tú`, `ti`, `te`, `tu `, `tus`
+- Formal signals: `usted`, `le`, `su `, `sus`
+
+Count occurrences of each signal across all values (case-insensitive, whole-word match). The side with more signals wins. If counts are equal or both zero, default to **informal** and flag it as uncertain.
+
+**Brand terms:** Find words that appear identically (untranslated) across every locale for the same key. These are candidates for `doNotTranslate`.
+
+**Dispatch two independent subagents** to analyse the translations and reconcile their findings:
+- Subagent A: analyse the German locale (if present)
+- Subagent B: analyse the French or Spanish locale (if present), or a second pass of German
+
+If both agree → use that result confidently. If they disagree → flag as uncertain and ask the user.
+
+## Step 4: Present findings and ask for confirmation
+
+Show a summary including the evidence behind tone detection, and ask the user to confirm or edit before writing anything:
 
 > Found N namespace(s):
 > - **[name]** — `[path]` ([structure], locales: [list])
 >
-> Detected style: [tone] tone, do not translate: [terms]
+> Detected style: **[informal/formal/uncertain]** tone
+> Evidence: [e.g. "47 informal signals (du/dich/dir) vs 2 formal (Sie) in DE locale"] or [e.g. "stated in CLAUDE.md"]
+> Do not translate: [terms]
 >
-> Does this look right? You can rename namespaces, adjust descriptions, or update the style.
+> Does this look right? You can correct the tone, adjust namespace names/descriptions, or update the do-not-translate list.
+
+If tone was **uncertain**, explicitly ask: "We couldn't confidently detect the tone — should translations use informal (du) or formal (Sie) language?"
 
 Wait for the user's response before proceeding.
 
-## Step 4: Determine primary locale
+## Step 5: Determine primary locale
 
 Ask: "Which locale is the source of truth (primary locale)?" — default to `en` if an `en` locale file exists.
 
-## Step 5: Write .i18n-mcp.json to project root
+## Step 6: Write .i18n-mcp.json to project root
 
 Write the confirmed configuration:
 
@@ -67,7 +99,7 @@ Write the confirmed configuration:
 }
 ```
 
-## Step 6: Add MCP server to project .claude/settings.json
+## Step 7: Add MCP server to project .claude/settings.json
 
 Read `.claude/settings.json` (create with `{}` if it does not exist). Add the MCP entry under `mcpServers`:
 
@@ -82,7 +114,7 @@ Read `.claude/settings.json` (create with `{}` if it does not exist). Add the MC
 }
 ```
 
-## Step 7: Append CLAUDE.md snippet
+## Step 8: Append CLAUDE.md snippet
 
 Append to the project's `CLAUDE.md` (create the file if it does not exist):
 
