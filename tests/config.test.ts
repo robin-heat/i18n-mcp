@@ -48,7 +48,7 @@ describe('readConfigFromPath', () => {
   it('throws if config is invalid JSON', () => {
     const configPath = join(tmpDir, '.i18n-mcp.json');
     writeFileSync(configPath, 'not json');
-    expect(() => readConfigFromPath(configPath)).toThrow();
+    expect(() => readConfigFromPath(configPath)).toThrow(/invalid json/i);
   });
 
   it('throws if required fields are missing', () => {
