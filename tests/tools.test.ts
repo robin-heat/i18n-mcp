@@ -1,0 +1,62 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Config } from '../src/config.js';
+import { clearStructureCache } from '../src/namespace.js';
+import { getTranslations } from '../src/tools.js';
+
+let tmpDir: string;
+let config: Config;
+
+beforeEach(() => {
+  tmpDir = mkdtempSync(join(tmpdir(), 'i18n-mcp-tools-test-'));
+  clearStructureCache();
+  writeFileSync(join(tmpDir, 'en.json'), JSON.stringify({
+    button: { save: 'Save', cancel: 'Cancel' },
+    title: 'Hello',
+  }));
+  writeFileSync(join(tmpDir, 'de.json'), JSON.stringify({
+    button: { save: 'Speichern', cancel: 'Abbrechen' },
+    title: 'Hallo',
+  }));
+  config = {
+    primaryLocale: 'en',
+    namespaces: [{ name: 'common', description: 'Shared', path: tmpDir }],
+  };
+});
+
+afterEach(() => {
+  rmSync(tmpDir, { recursive: true, force: true });
+});
+
+describe('getTranslations', () => {
+  it('returns all keys with translations across all locales', () => {
+    const result = getTranslations(config, 'common');
+    expect(result.isError).toBeUndefined();
+    const data = JSON.parse(result.content[0].text);
+    expect(data['button.save']).toEqual({ en: 'Save', de: 'Speichern' });
+    expect(data['button.cancel']).toEqual({ en: 'Cancel', de: 'Abbrechen' });
+    expect(data['title']).toEqual({ en: 'Hello', de: 'Hallo' });
+  });
+
+  it('filters by glob pattern on keys', () => {
+    const result = getTranslations(config, 'common', 'button.*');
+    const data = JSON.parse(result.content[0].text);
+    expect(Object.keys(data)).toEqual(expect.arrayContaining(['button.save', 'button.cancel']));
+    expect(data['title']).toBeUndefined();
+  });
+
+  it('filters by substring match on values', () => {
+    const result = getTranslations(config, 'common', 'Speichern');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['button.save']).toBeDefined();
+    expect(data['button.cancel']).toBeUndefined();
+  });
+
+  it('returns isError for unknown namespace', () => {
+    const result = getTranslations(config, 'unknown');
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("'unknown'");
+  });
+});
