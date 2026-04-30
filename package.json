@@ -1,5 +1,5 @@
 {
-  "name": "i18n-mcp",
+  "name": "@robinheat/i18n-mcp",
   "version": "0.1.0",
   "description": "MCP server for managing i18n JSON translation files",
   "type": "module",

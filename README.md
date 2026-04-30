@@ -171,7 +171,7 @@ Add the server to your project's `.claude/settings.json`:
   "mcpServers": {
     "i18n-mcp": {
       "command": "npx",
-      "args": ["-y", "i18n-mcp@latest"]
+      "args": ["-y", "@robinheat/i18n-mcp@latest"]
     }
   }
 }

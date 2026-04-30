@@ -108,7 +108,7 @@ Read `.claude/settings.json` (create with `{}` if it does not exist). Add the MC
   "mcpServers": {
     "i18n-mcp": {
       "command": "npx",
-      "args": ["-y", "i18n-mcp@latest"]
+      "args": ["-y", "@robinheat/i18n-mcp@latest"]
     }
   }
 }

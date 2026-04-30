@@ -85,11 +85,17 @@ export function deleteTranslation(config, namespace, key) {
     if (!ns)
         return namespaceNotFound(config, namespace);
     const locales = listLocales(ns.path, ns.structure);
+    let deletedCount = 0;
     for (const locale of locales) {
         const data = readLocale(ns.path, locale, ns.structure);
-        writeLocale(ns.path, locale, ns.structure, deleteNestedKey(data, key));
+        if (flattenKeys(data)[key] !== undefined) {
+            writeLocale(ns.path, locale, ns.structure, deleteNestedKey(data, key));
+            deletedCount++;
+        }
     }
-    return ok(`Deleted key '${key}' from ${locales.length} locale(s)`);
+    if (deletedCount === 0)
+        return ok(`Key '${key}' not found — nothing deleted`);
+    return ok(`Deleted key '${key}' from ${deletedCount} locale(s)`);
 }
 export function checkTranslationIntegrity(config, namespace) {
     const namespaces = namespace
