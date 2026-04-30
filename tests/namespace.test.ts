@@ -53,6 +53,11 @@ describe('readLocale', () => {
   it('returns empty object when file does not exist', () => {
     expect(readLocale(tmpDir, 'de', 'flat')).toEqual({});
   });
+
+  it('throws on invalid JSON content', () => {
+    writeFileSync(join(tmpDir, 'en.json'), 'not valid json');
+    expect(() => readLocale(tmpDir, 'en', 'flat')).toThrow(/invalid json/i);
+  });
 });
 
 describe('writeLocale', () => {

@@ -17,10 +17,11 @@ export function clearStructureCache(): void {
 }
 
 export function detectStructure(namespacePath: string, primaryLocale: string): FileStructure {
-  if (structureCache.has(namespacePath)) return structureCache.get(namespacePath)!;
+  const cacheKey = `${namespacePath}::${primaryLocale}`;
+  if (structureCache.has(cacheKey)) return structureCache.get(cacheKey)!;
   const folderPath = join(namespacePath, primaryLocale, 'translation.json');
   const structure: FileStructure = existsSync(folderPath) ? 'folder' : 'flat';
-  structureCache.set(namespacePath, structure);
+  structureCache.set(cacheKey, structure);
   return structure;
 }
 
@@ -41,11 +42,21 @@ export function readLocale(
 ): Record<string, unknown> {
   const filePath = localeFilePath(namespacePath, locale, structure);
   if (!existsSync(filePath)) return {};
+
+  const content = readFileSync(filePath, 'utf-8');
+  let parsed: unknown;
   try {
-    return JSON.parse(readFileSync(filePath, 'utf-8')) as Record<string, unknown>;
-  } catch {
-    return {};
+    parsed = JSON.parse(content);
+  } catch (err) {
+    throw new Error(
+      `Invalid JSON in locale file ${filePath}: ${(err as SyntaxError).message}`,
+      { cause: err }
+    );
   }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error(`Locale file ${filePath} must contain a JSON object, got: ${typeof parsed}`);
+  }
+  return parsed as Record<string, unknown>;
 }
 
 export function writeLocale(
