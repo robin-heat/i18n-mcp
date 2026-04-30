@@ -6,6 +6,7 @@ import {
   clearStructureCache,
   detectStructure,
   listLocales,
+  localeFilePath,
   readLocale,
   writeLocale,
 } from '../src/namespace.js';
@@ -78,6 +79,24 @@ describe('writeLocale', () => {
     const { readdirSync } = await import('node:fs');
     const files = readdirSync(tmpDir);
     expect(files.some(f => f.endsWith('.tmp'))).toBe(false);
+  });
+});
+
+describe('localeFilePath', () => {
+  it('throws on locale names with path traversal characters', () => {
+    expect(() => localeFilePath('/tmp/test', '../evil', 'flat'))
+      .toThrow('Invalid locale name');
+  });
+
+  it('throws on locale names with slashes', () => {
+    expect(() => localeFilePath('/tmp/test', 'en/US', 'flat'))
+      .toThrow('Invalid locale name');
+  });
+
+  it('accepts valid locale names', () => {
+    expect(() => localeFilePath('/tmp/test', 'en', 'flat')).not.toThrow();
+    expect(() => localeFilePath('/tmp/test', 'en-US', 'flat')).not.toThrow();
+    expect(() => localeFilePath('/tmp/test', 'zh_CN', 'flat')).not.toThrow();
   });
 });
 

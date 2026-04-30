@@ -50,6 +50,11 @@ describe('setNestedValue', () => {
     expect(() => setNestedValue({ items: ['a', 'b'] }, 'items.first', 'A'))
       .toThrow("Cannot set 'items.first': 'items' is not a plain object");
   });
+
+  it('throws when setting a key that is already an object subtree', () => {
+    expect(() => setNestedValue({ button: { save: 'Save' } }, 'button', 'X'))
+      .toThrow("Cannot set 'button': would overwrite object subtree at 'button'");
+  });
 });
 
 describe('deleteNestedKey', () => {

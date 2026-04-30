@@ -137,8 +137,8 @@ const CheckIntegrityInput = z.object({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
-
-  if (name === 'get_translations') {
+  try {
+    if (name === 'get_translations') {
     const parsed = GetTranslationsInput.safeParse(args);
     if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
     return getTranslations(config, parsed.data.namespace, parsed.data.query);
@@ -168,7 +168,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     return checkTranslationIntegrity(config, parsed.data.namespace);
   }
 
-  return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
+    return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { content: [{ type: 'text', text: msg }], isError: true };
+  }
 });
 
 const transport = new StdioServerTransport();

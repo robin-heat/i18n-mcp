@@ -31,7 +31,12 @@ export function setNestedValue(
       : {};
     current = current[part] as Record<string, unknown>;
   }
-  current[parts[parts.length - 1]] = value;
+  const lastPart = parts[parts.length - 1];
+  const existing = current[lastPart];
+  if (existing !== undefined && typeof existing === 'object' && existing !== null && !Array.isArray(existing)) {
+    throw new Error(`Cannot set '${dottedPath}': would overwrite object subtree at '${lastPart}'`);
+  }
+  current[lastPart] = value;
   return result;
 }
 

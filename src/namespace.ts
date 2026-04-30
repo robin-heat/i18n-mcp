@@ -30,6 +30,9 @@ export function localeFilePath(
   locale: string,
   structure: FileStructure
 ): string {
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(locale)) {
+    throw new Error(`Invalid locale name: '${locale}'. Locale names must contain only letters, digits, hyphens, and underscores.`);
+  }
   return structure === 'flat'
     ? join(namespacePath, `${locale}.json`)
     : join(namespacePath, locale, 'translation.json');
