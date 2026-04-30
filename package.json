@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "MCP server for managing i18n JSON translation files",
   "type": "module",
+  "files": [
+    "dist/",
+    "skills/"
+  ],
   "bin": {
     "i18n-mcp": "dist/server.js"
   },
