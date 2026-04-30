@@ -145,9 +145,10 @@ describe('deleteTranslation', () => {
     expect(data['button.cancel']).toBeDefined();
   });
 
-  it('succeeds silently when key does not exist', () => {
+  it('reports nothing deleted when key does not exist', () => {
     const result = deleteTranslation(config, 'common', 'nonexistent.key');
     expect(result.isError).toBeUndefined();
+    expect(result.content[0].text).toContain('not found');
   });
 
   it('returns isError for unknown namespace', () => {
