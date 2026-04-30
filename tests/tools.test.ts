@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Config } from '../src/config.js';
 import { clearStructureCache } from '../src/namespace.js';
-import { getTranslations } from '../src/tools.js';
+import { addTranslation, getTranslations } from '../src/tools.js';
 
 let tmpDir: string;
 let config: Config;
@@ -58,5 +58,42 @@ describe('getTranslations', () => {
     const result = getTranslations(config, 'unknown');
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain("'unknown'");
+  });
+});
+
+describe('addTranslation', () => {
+  it('adds a new top-level key to specified locales', () => {
+    addTranslation(config, 'common', 'greeting', { en: 'Hi', de: 'Hallo' });
+    const result = getTranslations(config, 'common', 'greeting');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['greeting']).toEqual({ en: 'Hi', de: 'Hallo' });
+  });
+
+  it('adds a nested key using dot notation', () => {
+    addTranslation(config, 'common', 'nav.home', { en: 'Home', de: 'Start' });
+    const result = getTranslations(config, 'common', 'nav.*');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['nav.home']).toEqual({ en: 'Home', de: 'Start' });
+  });
+
+  it('updates an existing key without touching other keys', () => {
+    addTranslation(config, 'common', 'title', { en: 'Updated' });
+    const result = getTranslations(config, 'common');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['title']['en']).toBe('Updated');
+    expect(data['button.save']['en']).toBe('Save');
+  });
+
+  it('only writes provided locales, leaving others unchanged', () => {
+    addTranslation(config, 'common', 'new.key', { en: 'English only' });
+    const result = getTranslations(config, 'common', 'new.key');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['new.key']['en']).toBe('English only');
+    expect(data['new.key']['de']).toBeUndefined();
+  });
+
+  it('returns isError for unknown namespace', () => {
+    const result = addTranslation(config, 'unknown', 'key', { en: 'val' });
+    expect(result.isError).toBe(true);
   });
 });

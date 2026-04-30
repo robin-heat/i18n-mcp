@@ -1,7 +1,7 @@
 import { minimatch } from 'minimatch';
 import { Config } from './config.js';
-import { detectStructure, FileStructure, listLocales, readLocale } from './namespace.js';
-import { flattenKeys } from './utils.js';
+import { detectStructure, FileStructure, listLocales, readLocale, writeLocale } from './namespace.js';
+import { flattenKeys, setNestedValue } from './utils.js';
 
 export type ToolResult = {
   content: Array<{ type: 'text'; text: string }>;
@@ -65,4 +65,21 @@ export function getTranslations(config: Config, namespace: string, query?: strin
   }
 
   return ok(JSON.stringify(result, null, 2));
+}
+
+export function addTranslation(
+  config: Config,
+  namespace: string,
+  key: string,
+  translations: Record<string, string>
+): ToolResult {
+  const ns = resolveNamespace(config, namespace);
+  if (!ns) return namespaceNotFound(config, namespace);
+
+  for (const [locale, value] of Object.entries(translations)) {
+    const data = readLocale(ns.path, locale, ns.structure);
+    writeLocale(ns.path, locale, ns.structure, setNestedValue(data, key, value));
+  }
+
+  return ok(`Added key '${key}' for locales: ${Object.keys(translations).join(', ')}`);
 }
