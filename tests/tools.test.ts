@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Config } from '../src/config.js';
 import { clearStructureCache } from '../src/namespace.js';
-import { addMultipleTranslations, addTranslation, getTranslations } from '../src/tools.js';
+import { addMultipleTranslations, addTranslation, deleteTranslation, getTranslations } from '../src/tools.js';
 
 let tmpDir: string;
 let config: Config;
@@ -125,6 +125,33 @@ describe('addMultipleTranslations', () => {
     const result = addMultipleTranslations(config, 'unknown', [
       { key: 'k', translations: { en: 'v' } },
     ]);
+    expect(result.isError).toBe(true);
+  });
+});
+
+describe('deleteTranslation', () => {
+  it('removes a key from all locale files', () => {
+    deleteTranslation(config, 'common', 'title');
+    const result = getTranslations(config, 'common');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['title']).toBeUndefined();
+  });
+
+  it('removes a nested key from all locale files', () => {
+    deleteTranslation(config, 'common', 'button.save');
+    const result = getTranslations(config, 'common');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['button.save']).toBeUndefined();
+    expect(data['button.cancel']).toBeDefined();
+  });
+
+  it('succeeds silently when key does not exist', () => {
+    const result = deleteTranslation(config, 'common', 'nonexistent.key');
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('returns isError for unknown namespace', () => {
+    const result = deleteTranslation(config, 'unknown', 'key');
     expect(result.isError).toBe(true);
   });
 });

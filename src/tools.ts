@@ -114,3 +114,16 @@ export function addMultipleTranslations(
 
   return ok(`Added ${entries.length} key(s) for locales: ${Array.from(allLocales).join(', ')}`);
 }
+
+export function deleteTranslation(config: Config, namespace: string, key: string): ToolResult {
+  const ns = resolveNamespace(config, namespace);
+  if (!ns) return namespaceNotFound(config, namespace);
+
+  const locales = listLocales(ns.path, ns.structure);
+  for (const locale of locales) {
+    const data = readLocale(ns.path, locale, ns.structure);
+    writeLocale(ns.path, locale, ns.structure, deleteNestedKey(data, key));
+  }
+
+  return ok(`Deleted key '${key}' from ${locales.length} locale(s)`);
+}
