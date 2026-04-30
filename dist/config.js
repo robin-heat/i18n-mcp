@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
 import { z } from 'zod';
 const NamespaceSchema = z.object({
     name: z.string().min(1),
@@ -34,6 +34,13 @@ export function readConfigFromPath(configPath) {
     const result = ConfigSchema.safeParse(raw);
     if (!result.success) {
         throw new Error(`Invalid .i18n-mcp.json: ${result.error.message}`);
+    }
+    const configDir = dirname(configPath);
+    for (const ns of result.data.namespaces) {
+        const resolved = resolve(configDir, ns.path);
+        if (!resolved.startsWith(configDir + sep) && resolved !== configDir) {
+            throw new Error(`Namespace '${ns.name}' path '${ns.path}' escapes the project directory`);
+        }
     }
     return result.data;
 }

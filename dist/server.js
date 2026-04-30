@@ -93,22 +93,23 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
     ],
 }));
+const safeKey = z.string().min(1).refine(k => k.split('.').every(p => p.length > 0 && !['__proto__', 'constructor', 'prototype'].includes(p)), { message: 'Key contains reserved or empty segments' });
 const GetTranslationsInput = z.object({
     namespace: z.string().min(1),
     query: z.string().optional(),
 });
 const AddTranslationInput = z.object({
     namespace: z.string().min(1),
-    key: z.string().min(1),
+    key: safeKey,
     translations: z.record(z.string()),
 });
 const AddMultipleTranslationsInput = z.object({
     namespace: z.string().min(1),
-    entries: z.array(z.object({ key: z.string().min(1), translations: z.record(z.string()) })).min(1),
+    entries: z.array(z.object({ key: safeKey, translations: z.record(z.string()) })).min(1),
 });
 const DeleteTranslationInput = z.object({
     namespace: z.string().min(1),
-    key: z.string().min(1),
+    key: safeKey,
 });
 const CheckIntegrityInput = z.object({
     namespace: z.string().optional(),

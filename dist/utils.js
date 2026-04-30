@@ -1,3 +1,11 @@
+const FORBIDDEN_SEGMENTS = new Set(['__proto__', 'constructor', 'prototype']);
+function assertSafeKeyPath(dottedPath) {
+    for (const part of dottedPath.split('.')) {
+        if (FORBIDDEN_SEGMENTS.has(part)) {
+            throw new Error(`Invalid key segment: '${part}' is a reserved property name`);
+        }
+    }
+}
 export function flattenKeys(obj, prefix = '') {
     const result = {};
     for (const [key, value] of Object.entries(obj)) {
@@ -12,6 +20,7 @@ export function flattenKeys(obj, prefix = '') {
     return result;
 }
 export function setNestedValue(obj, dottedPath, value) {
+    assertSafeKeyPath(dottedPath);
     const parts = dottedPath.split('.');
     const result = { ...obj };
     let current = result;
@@ -34,6 +43,7 @@ export function setNestedValue(obj, dottedPath, value) {
     return result;
 }
 export function deleteNestedKey(obj, dottedPath) {
+    assertSafeKeyPath(dottedPath);
     const parts = dottedPath.split('.');
     const result = { ...obj };
     let current = result;
