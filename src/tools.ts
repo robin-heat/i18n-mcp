@@ -89,6 +89,15 @@ export function getTranslation(
   return ok(JSON.stringify(result, null, 2));
 }
 
+export function getNamespaceKeys(config: Config, namespace: string): ToolResult {
+  const ns = resolveNamespace(config, namespace);
+  if (!ns) return namespaceNotFound(config, namespace);
+
+  const flat = flattenKeys(readLocale(ns.path, config.primaryLocale, ns.structure));
+  const keys = Object.keys(flat).sort();
+  return ok(JSON.stringify(keys, null, 2));
+}
+
 export function addTranslation(
   config: Config,
   namespace: string,

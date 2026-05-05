@@ -18,6 +18,7 @@ import {
   checkTranslationQuality,
   deleteTranslation,
   findUntranslatedValues,
+  getNamespaceKeys,
   getTranslation,
   getTranslations,
 } from './tools.js';
@@ -43,6 +44,19 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           key: { type: 'string', description: 'Dot-notation key, e.g. "button.save"' },
         },
         required: ['namespace', 'key'],
+      },
+    },
+    {
+      name: 'get_namespace_keys',
+      description:
+        'Return a sorted list of all dot-notation keys in a namespace without their values. ' +
+        'Use this to plan batch translation work — avoids blowing context with full locale values across many locales.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          namespace: { type: 'string', description: 'Namespace name from .i18n-mcp.json' },
+        },
+        required: ['namespace'],
       },
     },
     {
@@ -175,6 +189,10 @@ const safeKey = z.string().min(1).refine(
   { message: 'Key contains reserved or empty segments' }
 );
 
+const GetNamespaceKeysInput = z.object({
+  namespace: z.string().min(1),
+});
+
 const GetTranslationInput = z.object({
   namespace: z.string().min(1),
   key: safeKey,
@@ -218,6 +236,12 @@ const CheckTranslationQualityInput = z.object({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   try {
+    if (name === 'get_namespace_keys') {
+      const parsed = GetNamespaceKeysInput.safeParse(args);
+      if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+      return getNamespaceKeys(config, parsed.data.namespace);
+    }
+
     if (name === 'get_translation') {
       const parsed = GetTranslationInput.safeParse(args);
       if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Config } from '../src/config.js';
 import { clearStructureCache } from '../src/namespace.js';
-import { addMultipleTranslations, addTranslation, checkTranslationIntegrity, checkTranslationQuality, deleteTranslation, findUntranslatedValues, getTranslation, getTranslations } from '../src/tools.js';
+import { addMultipleTranslations, addTranslation, checkTranslationIntegrity, checkTranslationQuality, deleteTranslation, findUntranslatedValues, getNamespaceKeys, getTranslation, getTranslations } from '../src/tools.js';
 
 let tmpDir: string;
 let config: Config;
@@ -285,6 +285,27 @@ describe('checkTranslationQuality', () => {
 
   it('returns isError for unknown namespace', () => {
     const result = checkTranslationQuality(config, 'unknown', ['button.save']);
+    expect(result.isError).toBe(true);
+  });
+});
+
+describe('getNamespaceKeys', () => {
+  it('returns sorted list of all dot-notation keys from primary locale', () => {
+    const result = getNamespaceKeys(config, 'common');
+    expect(result.isError).toBeUndefined();
+    const keys = JSON.parse(result.content[0].text);
+    expect(keys).toEqual(['button.cancel', 'button.save', 'title']);
+  });
+
+  it('reflects keys added to primary locale', () => {
+    addTranslation(config, 'common', 'new.key', { en: 'New' });
+    const result = getNamespaceKeys(config, 'common');
+    const keys = JSON.parse(result.content[0].text);
+    expect(keys).toContain('new.key');
+  });
+
+  it('returns isError for unknown namespace', () => {
+    const result = getNamespaceKeys(config, 'unknown');
     expect(result.isError).toBe(true);
   });
 });
