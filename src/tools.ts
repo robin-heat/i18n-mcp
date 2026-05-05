@@ -151,6 +151,33 @@ export function addMultipleTranslations(
   return ok(`Added ${entries.length} key(s) for locales: ${Array.from(allLocales).join(', ')}`);
 }
 
+export function copyFromPrimary(
+  config: Config,
+  namespace: string,
+  keys: string[],
+  locales: string[]
+): ToolResult {
+  const ns = resolveNamespace(config, namespace);
+  if (!ns) return namespaceNotFound(config, namespace);
+
+  const primaryFlat = flattenKeys(readLocale(ns.path, config.primaryLocale, ns.structure));
+
+  const missingKeys = keys.filter(k => primaryFlat[k] === undefined);
+  if (missingKeys.length > 0) {
+    return err(`Keys not found in primary locale '${config.primaryLocale}': ${missingKeys.join(', ')}`);
+  }
+
+  for (const locale of locales) {
+    let data = readLocale(ns.path, locale, ns.structure);
+    for (const key of keys) {
+      data = setNestedValue(data, key, primaryFlat[key]);
+    }
+    writeLocale(ns.path, locale, ns.structure, data);
+  }
+
+  return ok(`Copied ${keys.length} key(s) from '${config.primaryLocale}' to locales: ${locales.join(', ')}`);
+}
+
 export function deleteTranslation(config: Config, namespace: string, key: string): ToolResult {
   const ns = resolveNamespace(config, namespace);
   if (!ns) return namespaceNotFound(config, namespace);

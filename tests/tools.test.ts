@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Config } from '../src/config.js';
 import { clearStructureCache } from '../src/namespace.js';
-import { addMultipleTranslations, addTranslation, checkTranslationIntegrity, checkTranslationQuality, deleteTranslation, findUntranslatedValues, getNamespaceKeys, getTranslation, getTranslations } from '../src/tools.js';
+import { addMultipleTranslations, addTranslation, checkTranslationIntegrity, checkTranslationQuality, copyFromPrimary, deleteTranslation, findUntranslatedValues, getNamespaceKeys, getTranslation, getTranslations } from '../src/tools.js';
 
 let tmpDir: string;
 let config: Config;
@@ -305,6 +305,42 @@ describe('checkTranslationQuality', () => {
 
   it('returns isError for unknown namespace', () => {
     const result = checkTranslationQuality(config, 'unknown', ['button.save']);
+    expect(result.isError).toBe(true);
+  });
+});
+
+describe('copyFromPrimary', () => {
+  it('copies primary value to specified locales', () => {
+    addTranslation(config, 'common', 'brand.name', { en: 'Robin' });
+    copyFromPrimary(config, 'common', ['brand.name'], ['de']);
+    const result = getTranslations(config, 'common', 'brand.name');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['brand.name']['de']).toBe('Robin');
+  });
+
+  it('copies multiple keys in one call', () => {
+    copyFromPrimary(config, 'common', ['button.save', 'title'], ['de']);
+    const result = getTranslations(config, 'common');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['button.save']['de']).toBe('Save');
+    expect(data['title']['de']).toBe('Hello');
+  });
+
+  it('overwrites existing translation with primary value', () => {
+    copyFromPrimary(config, 'common', ['button.save'], ['de']);
+    const result = getTranslations(config, 'common', 'button.save');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['button.save']['de']).toBe('Save');
+  });
+
+  it('returns isError when a key does not exist in primary locale', () => {
+    const result = copyFromPrimary(config, 'common', ['nonexistent.key'], ['de']);
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('nonexistent.key');
+  });
+
+  it('returns isError for unknown namespace', () => {
+    const result = copyFromPrimary(config, 'unknown', ['button.save'], ['de']);
     expect(result.isError).toBe(true);
   });
 });

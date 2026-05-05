@@ -16,6 +16,7 @@ import {
   addTranslation,
   checkTranslationIntegrity,
   checkTranslationQuality,
+  copyFromPrimary,
   deleteTranslation,
   findUntranslatedValues,
   getNamespaceKeys,
@@ -123,6 +124,30 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
         },
         required: ['namespace', 'entries'],
+      },
+    },
+    {
+      name: 'copy_from_primary',
+      description:
+        'Copy the primary locale value verbatim to specified locales for specified keys. ' +
+        'Use for brand names, prices, percentages, and other terms that legitimately should not be translated. ' +
+        'Returns an error if any key is missing from the primary locale.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          namespace: { type: 'string', description: 'Namespace name from .i18n-mcp.json' },
+          keys: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Dot-notation keys to copy, e.g. ["brand.name", "unit.percent"]',
+          },
+          locales: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Target locales to copy into, e.g. ["de", "fr"]',
+          },
+        },
+        required: ['namespace', 'keys', 'locales'],
       },
     },
     {
@@ -240,6 +265,12 @@ const CheckTranslationQualityInput = z.object({
   keys: z.array(safeKey).min(1),
 });
 
+const CopyFromPrimaryInput = z.object({
+  namespace: z.string().min(1),
+  keys: z.array(safeKey).min(1),
+  locales: z.array(z.string().min(1)).min(1),
+});
+
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   try {
@@ -295,6 +326,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const parsed = CheckTranslationQualityInput.safeParse(args);
       if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
       return checkTranslationQuality(config, parsed.data.namespace, parsed.data.keys);
+    }
+
+    if (name === 'copy_from_primary') {
+      const parsed = CopyFromPrimaryInput.safeParse(args);
+      if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+      return copyFromPrimary(config, parsed.data.namespace, parsed.data.keys, parsed.data.locales);
     }
 
     return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
