@@ -198,6 +198,8 @@ export function checkTranslationQuality(
   const ns = resolveNamespace(config, namespace);
   if (!ns) return namespaceNotFound(config, namespace);
 
+  const doNotTranslate = new Set(config.style?.doNotTranslate ?? []);
+
   const locales = listLocales(ns.path, ns.structure);
   const nonPrimaryLocales = locales.filter(l => l !== config.primaryLocale);
   const primaryFlat = flattenKeys(readLocale(ns.path, config.primaryLocale, ns.structure));
@@ -219,7 +221,9 @@ export function checkTranslationQuality(
       if (value === undefined || value === '') {
         issues[locale] = { issue: 'empty', value: value ?? '', primaryValue };
       } else if (value === primaryValue) {
-        issues[locale] = { issue: 'untranslated', value, primaryValue };
+        if (!doNotTranslate.has(primaryValue)) {
+          issues[locale] = { issue: 'untranslated', value, primaryValue };
+        }
       } else if (primaryValue.length > 15 && value.length < primaryValue.length * 0.3) {
         issues[locale] = { issue: 'short', value, primaryValue };
       }

@@ -212,7 +212,7 @@ const CheckIntegrityInput = z.object({
 
 const CheckTranslationQualityInput = z.object({
   namespace: z.string().min(1),
-  keys: z.array(z.string().min(1)).min(1),
+  keys: z.array(safeKey).min(1),
 });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {

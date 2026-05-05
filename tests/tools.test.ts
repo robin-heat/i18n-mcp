@@ -273,6 +273,16 @@ describe('checkTranslationQuality', () => {
     expect(result.content[0].text).toBe('All specified keys look good.');
   });
 
+  it('does not flag values listed in doNotTranslate', () => {
+    addTranslation(config, 'common', 'brand', { en: 'Robin', de: 'Robin' });
+    const configWithDoNotTranslate: Config = {
+      ...config,
+      style: { doNotTranslate: ['Robin'] },
+    };
+    const result = checkTranslationQuality(configWithDoNotTranslate, 'common', ['brand']);
+    expect(result.content[0].text).toBe('All specified keys look good.');
+  });
+
   it('returns isError for unknown namespace', () => {
     const result = checkTranslationQuality(config, 'unknown', ['button.save']);
     expect(result.isError).toBe(true);
