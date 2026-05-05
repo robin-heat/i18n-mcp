@@ -16,7 +16,7 @@ Run this once in your project root:
 npx @robinheat/i18n-mcp install
 ```
 
-This installs the Claude Code skills and adds the MCP server to your project's `.claude/settings.json`. Then:
+This installs the Claude Code skills and adds the MCP server to your project's `.mcp.json`. Then:
 
 1. **Restart Claude Code**
 2. **Run `/i18n-setup`** — auto-detects your translation files, infers tone and brand terms, writes `.i18n-mcp.json`

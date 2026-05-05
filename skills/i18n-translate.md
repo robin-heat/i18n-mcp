@@ -32,6 +32,8 @@ Then pre-fetch all primary locale values — you will pass these to every agent 
 get_translations("namespace")
 ```
 
+Cross-reference the Phase 1 `find_untranslated_values` output with the full key list to build a **per-locale filtered key list** — only the keys that still need translation for each locale. Pass only this filtered set to each agent, not the full namespace dump.
+
 ## Phase 3: Dispatch agents
 
 Dispatch **one agent per locale**, all in parallel. Use the prompt template below — fill in the variables and send. Do not batch multiple locales into the same agent.
@@ -42,7 +44,7 @@ Dispatch **one agent per locale**, all in parallel. Use the prompt template belo
 You are translating the [namespace] namespace into [locale] ([locale_name]).
 
 Primary locale values ([primaryLocale]):
-[paste the JSON output from get_translations here: { "key.path": "source value", ... }]
+[filtered JSON — only the keys that still need translation in this locale: { "key.path": "source value", ... }]
 
 Style:
 - Tone: [informal / formal]
@@ -50,7 +52,7 @@ Style:
 - Glossary: [term → translation pairs, or "none"]
 
 Instructions:
-1. Translate every key listed above into [locale_name].
+1. Translate every key listed above into [locale_name]. These are only the keys that still need translation — do not touch keys not listed here.
 2. Do NOT self-review. Generate your translations once and call add_multiple_translations immediately.
 3. Call add_multiple_translations ONCE with all keys in a single call:
    add_multiple_translations("[namespace]", [
