@@ -245,7 +245,7 @@ Then create `.i18n-mcp.json` in your project root manually.
 ## Development
 
 ```bash
-npm test          # run tests (59 tests)
+npm test          # run tests (85 tests)
 npm run build     # compile to dist/
 npm run dev       # run server directly with tsx (needs .i18n-mcp.json in cwd)
 ```
