@@ -73,10 +73,32 @@ check_translation_integrity("namespace")
 find_untranslated_values("namespace")
 ```
 
-If any keys are still missing or untranslated, use `check_translation_quality` on the specific keys:
+If any keys are still missing or untranslated, identify the exact locale/key combinations that failed. Use `check_translation_quality` for targeted diagnosis:
 
 ```
 check_translation_quality("namespace", ["key.one", "key.two"])
 ```
 
-Then re-dispatch targeted fix agents for only the affected locale/key combinations. Do not re-run the full job.
+Then re-dispatch a fix agent **per affected locale** using this template — do not re-run the full job:
+
+```
+You are fixing missing or incorrect translations in the [namespace] namespace for [locale] ([locale_name]).
+
+Keys that need fixing:
+[JSON: { "key.path": "source value (primaryLocale)", ... } — only the failing keys]
+
+Style:
+- Tone: [informal / formal]
+- Do not translate — copy verbatim: [doNotTranslate list, or "none"]
+- Glossary: [term → translation pairs, or "none"]
+
+Instructions:
+1. Translate only the keys listed above into [locale_name].
+2. Do NOT self-review. Generate once and submit immediately.
+3. Call add_multiple_translations ONCE with only the failing keys:
+   add_multiple_translations("[namespace]", [
+     { key: "key.path", translations: { "[locale]": "translation" } },
+     ...
+   ], ["[locale]"])
+4. Report STATUS: DONE when the write is complete, STATUS: BLOCKED if something prevents completion.
+```
