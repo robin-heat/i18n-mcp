@@ -7,6 +7,10 @@ description: Guide Claude through translation workflows using i18n-mcp tools. Us
 
 Follow these steps whenever working with translations.
 
+## 0. Check scale first
+
+If this job involves **more than 20 keys OR more than 3 locales**, stop here and use `/i18n-translate` instead. This workflow is for small targeted edits only.
+
 ## 1. Check integrity first
 
 Before touching any translations, understand the current state:
@@ -56,6 +60,10 @@ add_multiple_translations("namespace", [
   { key: "key.two", translations: { en: "...", de: "..." } }
 ])
 ```
+
+**Translation discipline:**
+- Never self-review translations. Generate the value and submit immediately — self-review loops are the single biggest time cost and don't improve quality.
+- Always use `add_multiple_translations` for 2+ keys. Never split into multiple calls — each call is a disk read-modify-write and they must be sequential.
 
 ## Arrays
 
