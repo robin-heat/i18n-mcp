@@ -288,9 +288,11 @@ describe('checkTranslationQuality', () => {
     expect(result.content[0].text).toBe('All specified keys look good.');
   });
 
-  it('skips keys not found in primary locale', () => {
+  it('warns about keys not found in primary locale', () => {
     const result = checkTranslationQuality(config, 'common', ['nonexistent.key']);
-    expect(result.content[0].text).toBe('All specified keys look good.');
+    expect(result.isError).toBeUndefined();
+    expect(result.content[0].text).toContain('nonexistent.key');
+    expect(result.content[0].text).toContain('not found');
   });
 
   it('does not flag values listed in doNotTranslate', () => {
@@ -337,6 +339,15 @@ describe('copyFromPrimary', () => {
     const result = copyFromPrimary(config, 'common', ['nonexistent.key'], ['de']);
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('nonexistent.key');
+  });
+
+  it('copies to multiple target locales in one call', () => {
+    writeFileSync(join(tmpDir, 'fr.json'), JSON.stringify({ button: { save: 'Sauvegarder' } }));
+    copyFromPrimary(config, 'common', ['button.save'], ['de', 'fr']);
+    const result = getTranslations(config, 'common', 'button.save');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['button.save']['de']).toBe('Save');
+    expect(data['button.save']['fr']).toBe('Save');
   });
 
   it('returns isError for unknown namespace', () => {

@@ -250,11 +250,15 @@ export function checkTranslationQuality(
     localeFlats[locale] = flattenKeys(readLocale(ns.path, locale, ns.structure));
   }
 
+  const unknownKeys: string[] = [];
   const result: Record<string, Record<string, QualityIssue>> = {};
 
   for (const key of keys) {
     const primaryValue = primaryFlat[key];
-    if (primaryValue === undefined) continue;
+    if (primaryValue === undefined) {
+      unknownKeys.push(key);
+      continue;
+    }
 
     const issues: Record<string, QualityIssue> = {};
     for (const locale of nonPrimaryLocales) {
@@ -272,8 +276,15 @@ export function checkTranslationQuality(
     if (Object.keys(issues).length > 0) result[key] = issues;
   }
 
-  if (Object.keys(result).length === 0) return ok('All specified keys look good.');
-  return ok(JSON.stringify(result, null, 2));
+  const hasIssues = Object.keys(result).length > 0;
+  const hasUnknown = unknownKeys.length > 0;
+
+  if (!hasIssues && !hasUnknown) return ok('All specified keys look good.');
+
+  const parts: string[] = [];
+  if (hasUnknown) parts.push(`Keys not found in primary locale: ${unknownKeys.join(', ')}`);
+  if (hasIssues) parts.push(JSON.stringify(result, null, 2));
+  return ok(parts.join('\n\n'));
 }
 
 export function checkTranslationIntegrity(config: Config, namespace?: string): ToolResult {

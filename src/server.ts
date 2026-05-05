@@ -50,7 +50,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'get_namespace_keys',
       description:
-        'Return a sorted list of all dot-notation keys in a namespace without their values. ' +
+        'Return a sorted list of all dot-notation keys in a namespace (from the primary locale) without their values. ' +
         'Use this to plan batch translation work — avoids blowing context with full locale values across many locales.',
       inputSchema: {
         type: 'object',
@@ -243,7 +243,7 @@ const AddTranslationInput = z.object({
 const AddMultipleTranslationsInput = z.object({
   namespace: z.string().min(1),
   entries: z.array(z.object({ key: safeKey, translations: z.record(z.string()) })).min(1),
-  locales: z.array(z.string().min(1)).optional(),
+  locales: z.array(z.string().min(1)).min(1).optional(),
 });
 
 const DeleteTranslationInput = z.object({
