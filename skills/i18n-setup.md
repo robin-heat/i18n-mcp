@@ -99,9 +99,9 @@ Write the confirmed configuration:
 }
 ```
 
-## Step 7: Add MCP server to project .claude/settings.json
+## Step 7: Add MCP server to project .mcp.json
 
-Read `.claude/settings.json` (create with `{}` if it does not exist). Add the MCP entry under `mcpServers`:
+Read `.mcp.json` in the project root (create with `{}` if it does not exist). Add the MCP entry under `mcpServers`:
 
 ```json
 {

@@ -41,27 +41,26 @@ function installSkills(): void {
 }
 
 function installMcp(): void {
-  const settingsPath = join(process.cwd(), '.claude', 'settings.json');
-  mkdirSync(dirname(settingsPath), { recursive: true });
+  const mcpPath = join(process.cwd(), '.mcp.json');
 
-  let settings: Record<string, unknown> = {};
-  if (existsSync(settingsPath)) {
+  let config: Record<string, unknown> = {};
+  if (existsSync(mcpPath)) {
     try {
-      settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+      config = JSON.parse(readFileSync(mcpPath, 'utf-8'));
     } catch {
       // start fresh if malformed
     }
   }
 
-  const mcpServers = (settings.mcpServers ?? {}) as Record<string, unknown>;
+  const mcpServers = (config.mcpServers ?? {}) as Record<string, unknown>;
   mcpServers['i18n-mcp'] = {
     command: 'npx',
     args: ['-y', '@robinheat/i18n-mcp@latest'],
   };
-  settings.mcpServers = mcpServers;
+  config.mcpServers = mcpServers;
 
-  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
-  console.log(`  ✓ Added MCP server to .claude/settings.json`);
+  writeFileSync(mcpPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+  console.log(`  ✓ Added MCP server to .mcp.json`);
 }
 
 export function runInstall(): void {

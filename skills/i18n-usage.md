@@ -48,6 +48,16 @@ add_multiple_translations("namespace", [
 ])
 ```
 
+## Arrays
+
+JSON arrays are not supported as leaf values. Use indexed dot-keys instead:
+
+```json
+{ "steps": { "0": "First", "1": "Second", "2": "Third" } }
+```
+
+Add and query them like any other key — `steps.0`, `steps.1`, etc. Use `get_translations("namespace", "steps.*")` to fetch all elements at once.
+
 ## 4. Follow the project style
 
 Read `.i18n-mcp.json` and CLAUDE.md for:

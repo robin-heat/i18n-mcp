@@ -134,6 +134,37 @@ check_translation_integrity()           // check all namespaces
 check_translation_integrity("common")   // check one namespace
 ```
 
+## Array Values
+
+JSON arrays are not supported as leaf values. Use **indexed dot-keys** instead — this is what i18next expects when you call `t('key', { returnObjects: true })` anyway.
+
+**In your translation file:**
+```json
+{
+  "steps": {
+    "0": "Connect your device",
+    "1": "Open the app",
+    "2": "Follow the setup guide"
+  }
+}
+```
+
+**Adding via tools:**
+```
+add_multiple_translations("common", [
+  { key: "steps.0", translations: { en: "Connect your device", de: "Gerät verbinden" } },
+  { key: "steps.1", translations: { en: "Open the app",        de: "App öffnen" } },
+  { key: "steps.2", translations: { en: "Follow the setup guide", de: "Setup-Anleitung folgen" } }
+])
+```
+
+**Reading via tools:**
+```
+get_translations("common", "steps.*")
+```
+
+Integrity checks and missing-key detection work the same as for any other key.
+
 ## Usage Skill
 
 For best results, use the `i18n-usage` skill at the start of translation work:
@@ -146,7 +177,7 @@ It guides Claude to check integrity first, search before adding, always add all 
 
 ## Manual Installation (without npm)
 
-Add the server to your project's `.claude/settings.json`:
+Add the server to `.mcp.json` in your project root:
 
 ```json
 {
