@@ -188,6 +188,49 @@ export function findUntranslatedValues(
   return ok(JSON.stringify(result, null, 2));
 }
 
+type QualityIssue = { issue: 'untranslated' | 'empty' | 'short'; value: string; primaryValue: string };
+
+export function checkTranslationQuality(
+  config: Config,
+  namespace: string,
+  keys: string[]
+): ToolResult {
+  const ns = resolveNamespace(config, namespace);
+  if (!ns) return namespaceNotFound(config, namespace);
+
+  const locales = listLocales(ns.path, ns.structure);
+  const nonPrimaryLocales = locales.filter(l => l !== config.primaryLocale);
+  const primaryFlat = flattenKeys(readLocale(ns.path, config.primaryLocale, ns.structure));
+
+  const localeFlats: Record<string, Record<string, string>> = {};
+  for (const locale of nonPrimaryLocales) {
+    localeFlats[locale] = flattenKeys(readLocale(ns.path, locale, ns.structure));
+  }
+
+  const result: Record<string, Record<string, QualityIssue>> = {};
+
+  for (const key of keys) {
+    const primaryValue = primaryFlat[key];
+    if (primaryValue === undefined) continue;
+
+    const issues: Record<string, QualityIssue> = {};
+    for (const locale of nonPrimaryLocales) {
+      const value = localeFlats[locale][key];
+      if (value === undefined || value === '') {
+        issues[locale] = { issue: 'empty', value: value ?? '', primaryValue };
+      } else if (value === primaryValue) {
+        issues[locale] = { issue: 'untranslated', value, primaryValue };
+      } else if (primaryValue.length > 15 && value.length < primaryValue.length * 0.3) {
+        issues[locale] = { issue: 'short', value, primaryValue };
+      }
+    }
+    if (Object.keys(issues).length > 0) result[key] = issues;
+  }
+
+  if (Object.keys(result).length === 0) return ok('All specified keys look good.');
+  return ok(JSON.stringify(result, null, 2));
+}
+
 export function checkTranslationIntegrity(config: Config, namespace?: string): ToolResult {
   const namespaces = namespace
     ? config.namespaces.filter(n => n.name === namespace)

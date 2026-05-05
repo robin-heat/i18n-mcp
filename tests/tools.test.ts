@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Config } from '../src/config.js';
 import { clearStructureCache } from '../src/namespace.js';
-import { addMultipleTranslations, addTranslation, checkTranslationIntegrity, deleteTranslation, findUntranslatedValues, getTranslation, getTranslations } from '../src/tools.js';
+import { addMultipleTranslations, addTranslation, checkTranslationIntegrity, checkTranslationQuality, deleteTranslation, findUntranslatedValues, getTranslation, getTranslations } from '../src/tools.js';
 
 let tmpDir: string;
 let config: Config;
@@ -217,6 +217,64 @@ describe('checkTranslationIntegrity', () => {
 
   it('returns isError for unknown namespace', () => {
     const result = checkTranslationIntegrity(config, 'unknown');
+    expect(result.isError).toBe(true);
+  });
+});
+
+describe('checkTranslationQuality', () => {
+  it('returns clean message for fully translated keys', () => {
+    const result = checkTranslationQuality(config, 'common', ['button.save', 'title']);
+    expect(result.isError).toBeUndefined();
+    expect(result.content[0].text).toBe('All specified keys look good.');
+  });
+
+  it('flags untranslated values (identical to primary)', () => {
+    addTranslation(config, 'common', 'brand', { en: 'Robin', de: 'Robin' });
+    const result = checkTranslationQuality(config, 'common', ['brand']);
+    const data = JSON.parse(result.content[0].text);
+    expect(data['brand']['de'].issue).toBe('untranslated');
+    expect(data['brand']['de'].value).toBe('Robin');
+    expect(data['brand']['de'].primaryValue).toBe('Robin');
+  });
+
+  it('flags empty values', () => {
+    addTranslation(config, 'common', 'empty.key', { en: 'Has value', de: '' });
+    const result = checkTranslationQuality(config, 'common', ['empty.key']);
+    const data = JSON.parse(result.content[0].text);
+    expect(data['empty.key']['de'].issue).toBe('empty');
+  });
+
+  it('flags missing values as empty', () => {
+    addTranslation(config, 'common', 'missing.in.de', { en: 'Only English' });
+    const result = checkTranslationQuality(config, 'common', ['missing.in.de']);
+    const data = JSON.parse(result.content[0].text);
+    expect(data['missing.in.de']['de'].issue).toBe('empty');
+  });
+
+  it('flags suspiciously short translations', () => {
+    addTranslation(config, 'common', 'long.text', {
+      en: 'This is a very long English description text',
+      de: 'Kurz',
+    });
+    const result = checkTranslationQuality(config, 'common', ['long.text']);
+    const data = JSON.parse(result.content[0].text);
+    expect(data['long.text']['de'].issue).toBe('short');
+    expect(data['long.text']['de'].primaryValue).toBe('This is a very long English description text');
+  });
+
+  it('does not flag short primary values for length ratio', () => {
+    addTranslation(config, 'common', 'word', { en: 'Yes', de: 'Ja' });
+    const result = checkTranslationQuality(config, 'common', ['word']);
+    expect(result.content[0].text).toBe('All specified keys look good.');
+  });
+
+  it('skips keys not found in primary locale', () => {
+    const result = checkTranslationQuality(config, 'common', ['nonexistent.key']);
+    expect(result.content[0].text).toBe('All specified keys look good.');
+  });
+
+  it('returns isError for unknown namespace', () => {
+    const result = checkTranslationQuality(config, 'unknown', ['button.save']);
     expect(result.isError).toBe(true);
   });
 });

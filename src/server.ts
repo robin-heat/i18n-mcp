@@ -15,6 +15,7 @@ import {
   addMultipleTranslations,
   addTranslation,
   checkTranslationIntegrity,
+  checkTranslationQuality,
   deleteTranslation,
   findUntranslatedValues,
   getTranslation,
@@ -146,6 +147,26 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: [],
       },
     },
+    {
+      name: 'check_translation_quality',
+      description:
+        'Check translation quality for specific keys. Returns issues per locale per key: ' +
+        '"untranslated" (value identical to primary), "empty" (missing or blank), ' +
+        '"short" (less than 30% the length of the primary value for strings longer than 15 chars). ' +
+        'Use this for targeted quality checks instead of scanning the full namespace.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          namespace: { type: 'string', description: 'Namespace name from .i18n-mcp.json' },
+          keys: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Dot-notation keys to check, e.g. ["button.save", "title"]',
+          },
+        },
+        required: ['namespace', 'keys'],
+      },
+    },
   ],
 }));
 
@@ -187,6 +208,11 @@ const FindUntranslatedInput = z.object({
 
 const CheckIntegrityInput = z.object({
   namespace: z.string().optional(),
+});
+
+const CheckTranslationQualityInput = z.object({
+  namespace: z.string().min(1),
+  keys: z.array(z.string().min(1)).min(1),
 });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -232,6 +258,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const parsed = CheckIntegrityInput.safeParse(args);
       if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
       return checkTranslationIntegrity(config, parsed.data.namespace);
+    }
+
+    if (name === 'check_translation_quality') {
+      const parsed = CheckTranslationQualityInput.safeParse(args);
+      if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+      return checkTranslationQuality(config, parsed.data.namespace, parsed.data.keys);
     }
 
     return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
