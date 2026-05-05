@@ -215,15 +215,23 @@ get_translations("common", "steps.*")
 
 Integrity checks and missing-key detection work the same as for any other key.
 
-## Usage Skill
+## Usage Skills
 
-For best results, use the `i18n-usage` skill at the start of translation work:
+**For day-to-day work** (small edits, targeted key additions):
 
 ```
 /i18n-usage
 ```
 
-It guides Claude to check integrity first, search before adding, always add all locales at once, and verify coverage when done.
+Guides Claude to check integrity first, search before adding, always add all locales at once, and verify coverage when done.
+
+**For large translation jobs** (20+ keys or 3+ locales):
+
+```
+/i18n-translate
+```
+
+Orchestrates parallel agents — one per locale — so large jobs run faster without self-review loops or sequential batching.
 
 ## Manual Installation (without npm)
 

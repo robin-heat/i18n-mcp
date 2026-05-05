@@ -129,4 +129,4 @@ Always call `get_translations` with a relevant query before adding new keys to c
 
 ## Done
 
-Tell the user: "Setup complete. Restart Claude Code to load the i18n-mcp server. Use the `i18n-usage` skill when working with translations."
+Tell the user: "Setup complete. Restart Claude Code to load the i18n-mcp server. Use the `i18n-usage` skill for day-to-day translation work, or `/i18n-translate` for large jobs (20+ keys or 3+ locales)."

@@ -19,6 +19,7 @@ function installSkills(): void {
   for (const [name, file] of [
     ['i18n-setup', 'i18n-setup.md'],
     ['i18n-usage', 'i18n-usage.md'],
+    ['i18n-translate', 'i18n-translate.md'],
   ]) {
     const src = join(skillsSource, file);
     const targetDir = join(skillsTarget, name);
