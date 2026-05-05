@@ -16,6 +16,7 @@ import {
   addTranslation,
   checkTranslationIntegrity,
   deleteTranslation,
+  findUntranslatedValues,
   getTranslations,
 } from './tools.js';
 
@@ -101,6 +102,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: 'find_untranslated_values',
+      description:
+        'Find keys where the translated value is identical to the primary locale value — ' +
+        'i.e. placeholder translations that were never actually translated. ' +
+        'Terms in doNotTranslate are excluded. ' +
+        'Returns { locale: { key: primaryValue } } for each stale key found.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          namespace: { type: 'string', description: 'Namespace name from .i18n-mcp.json' },
+          locale: { type: 'string', description: 'Check only this locale (optional — defaults to all non-primary locales)' },
+        },
+        required: ['namespace'],
+      },
+    },
+    {
       name: 'check_translation_integrity',
       description:
         'Compare all locale files against the primary locale. ' +
@@ -143,6 +160,11 @@ const DeleteTranslationInput = z.object({
   key: safeKey,
 });
 
+const FindUntranslatedInput = z.object({
+  namespace: z.string().min(1),
+  locale: z.string().optional(),
+});
+
 const CheckIntegrityInput = z.object({
   namespace: z.string().optional(),
 });
@@ -172,6 +194,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const parsed = DeleteTranslationInput.safeParse(args);
     if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
     return deleteTranslation(config, parsed.data.namespace, parsed.data.key);
+  }
+
+  if (name === 'find_untranslated_values') {
+    const parsed = FindUntranslatedInput.safeParse(args);
+    if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+    return findUntranslatedValues(config, parsed.data.namespace, parsed.data.locale);
   }
 
   if (name === 'check_translation_integrity') {

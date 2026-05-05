@@ -127,6 +127,17 @@ Removes a key from all locale files in a namespace.
 delete_translation("common", "button.save")
 ```
 
+### `find_untranslated_values`
+
+Finds keys where the translated value is identical to the primary locale — placeholder translations that were never actually translated. Terms in `doNotTranslate` are excluded.
+
+```
+find_untranslated_values("web")           // all non-primary locales
+find_untranslated_values("web", "de")     // one locale
+```
+
+Returns `{ locale: { key: primaryValue } }` for each stale entry found.
+
 ### `check_translation_integrity`
 
 Compares all locales against `primaryLocale`. Returns missing keys, extra keys, and empty values per locale.

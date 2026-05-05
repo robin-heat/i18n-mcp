@@ -67,10 +67,11 @@ Read `.i18n-mcp.json` and CLAUDE.md for:
 
 ## 5. Verify coverage before finishing
 
-Run integrity check again when done:
+Run both checks when done:
 
 ```
 check_translation_integrity("namespace")
+find_untranslated_values("namespace")
 ```
 
-Confirm no new missing keys were introduced. If any locale is missing coverage for keys you added, add the translations before finishing.
+`check_translation_integrity` catches missing or extra keys. `find_untranslated_values` catches keys that exist in every locale but still hold the primary locale's value — placeholder translations that were never actually translated. Fix any issues before finishing.

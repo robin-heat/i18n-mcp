@@ -133,6 +133,39 @@ export function deleteTranslation(config: Config, namespace: string, key: string
   return ok(`Deleted key '${key}' from ${deletedCount} locale(s)`);
 }
 
+export function findUntranslatedValues(
+  config: Config,
+  namespace: string,
+  locale?: string
+): ToolResult {
+  const ns = resolveNamespace(config, namespace);
+  if (!ns) return namespaceNotFound(config, namespace);
+
+  const doNotTranslate = new Set(config.style?.doNotTranslate ?? []);
+  const primaryFlat = flattenKeys(readLocale(ns.path, config.primaryLocale, ns.structure));
+
+  const localesToCheck = locale
+    ? [locale]
+    : listLocales(ns.path, ns.structure).filter(l => l !== config.primaryLocale);
+
+  const result: Record<string, Record<string, string>> = {};
+
+  for (const loc of localesToCheck) {
+    const localeFlat = flattenKeys(readLocale(ns.path, loc, ns.structure));
+    const stale: Record<string, string> = {};
+    for (const [key, primaryValue] of Object.entries(primaryFlat)) {
+      if (doNotTranslate.has(primaryValue)) continue;
+      if (localeFlat[key] === primaryValue) stale[key] = primaryValue;
+    }
+    if (Object.keys(stale).length > 0) result[loc] = stale;
+  }
+
+  if (Object.keys(result).length === 0) {
+    return ok('No untranslated values found.');
+  }
+  return ok(JSON.stringify(result, null, 2));
+}
+
 export function checkTranslationIntegrity(config: Config, namespace?: string): ToolResult {
   const namespaces = namespace
     ? config.namespaces.filter(n => n.name === namespace)
