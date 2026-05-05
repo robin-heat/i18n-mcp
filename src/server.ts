@@ -199,40 +199,40 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     if (name === 'get_translations') {
-    const parsed = GetTranslationsInput.safeParse(args);
-    if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
-    return getTranslations(config, parsed.data.namespace, parsed.data.query);
-  }
+      const parsed = GetTranslationsInput.safeParse(args);
+      if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+      return getTranslations(config, parsed.data.namespace, parsed.data.query);
+    }
 
-  if (name === 'add_translation') {
-    const parsed = AddTranslationInput.safeParse(args);
-    if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
-    return addTranslation(config, parsed.data.namespace, parsed.data.key, parsed.data.translations);
-  }
+    if (name === 'add_translation') {
+      const parsed = AddTranslationInput.safeParse(args);
+      if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+      return addTranslation(config, parsed.data.namespace, parsed.data.key, parsed.data.translations);
+    }
 
-  if (name === 'add_multiple_translations') {
-    const parsed = AddMultipleTranslationsInput.safeParse(args);
-    if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
-    return addMultipleTranslations(config, parsed.data.namespace, parsed.data.entries);
-  }
+    if (name === 'add_multiple_translations') {
+      const parsed = AddMultipleTranslationsInput.safeParse(args);
+      if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+      return addMultipleTranslations(config, parsed.data.namespace, parsed.data.entries);
+    }
 
-  if (name === 'delete_translation') {
-    const parsed = DeleteTranslationInput.safeParse(args);
-    if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
-    return deleteTranslation(config, parsed.data.namespace, parsed.data.key);
-  }
+    if (name === 'delete_translation') {
+      const parsed = DeleteTranslationInput.safeParse(args);
+      if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+      return deleteTranslation(config, parsed.data.namespace, parsed.data.key);
+    }
 
-  if (name === 'find_untranslated_values') {
-    const parsed = FindUntranslatedInput.safeParse(args);
-    if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
-    return findUntranslatedValues(config, parsed.data.namespace, parsed.data.locale);
-  }
+    if (name === 'find_untranslated_values') {
+      const parsed = FindUntranslatedInput.safeParse(args);
+      if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+      return findUntranslatedValues(config, parsed.data.namespace, parsed.data.locale);
+    }
 
-  if (name === 'check_translation_integrity') {
-    const parsed = CheckIntegrityInput.safeParse(args);
-    if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
-    return checkTranslationIntegrity(config, parsed.data.namespace);
-  }
+    if (name === 'check_translation_integrity') {
+      const parsed = CheckIntegrityInput.safeParse(args);
+      if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+      return checkTranslationIntegrity(config, parsed.data.namespace);
+    }
 
     return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
   } catch (e) {

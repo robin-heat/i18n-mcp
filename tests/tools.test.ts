@@ -81,6 +81,7 @@ describe('getTranslation', () => {
     const result = getTranslation(config, 'common', 'nonexistent.key');
     expect(result.isError).toBeUndefined();
     expect(result.content[0].text).toContain('not found');
+    expect(() => JSON.parse(result.content[0].text)).toThrow();
   });
 
   it('returns isError for unknown namespace', () => {
