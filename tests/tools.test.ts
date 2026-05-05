@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Config } from '../src/config.js';
 import { clearStructureCache } from '../src/namespace.js';
-import { addMultipleTranslations, addTranslation, checkTranslationIntegrity, deleteTranslation, getTranslations } from '../src/tools.js';
+import { addMultipleTranslations, addTranslation, checkTranslationIntegrity, deleteTranslation, findUntranslatedValues, getTranslation, getTranslations } from '../src/tools.js';
 
 let tmpDir: string;
 let config: Config;
@@ -58,6 +58,34 @@ describe('getTranslations', () => {
     const result = getTranslations(config, 'unknown');
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain("'unknown'");
+  });
+});
+
+describe('getTranslation', () => {
+  it('returns translations for a key across all locales', () => {
+    const result = getTranslation(config, 'common', 'button.save');
+    expect(result.isError).toBeUndefined();
+    const data = JSON.parse(result.content[0].text);
+    expect(data).toEqual({ en: 'Save', de: 'Speichern' });
+  });
+
+  it('returns only locales where the key exists', () => {
+    addTranslation(config, 'common', 'en.only', { en: 'English only' });
+    const result = getTranslation(config, 'common', 'en.only');
+    const data = JSON.parse(result.content[0].text);
+    expect(data).toEqual({ en: 'English only' });
+    expect(data.de).toBeUndefined();
+  });
+
+  it('returns not-found message when key does not exist', () => {
+    const result = getTranslation(config, 'common', 'nonexistent.key');
+    expect(result.isError).toBeUndefined();
+    expect(result.content[0].text).toContain('not found');
+  });
+
+  it('returns isError for unknown namespace', () => {
+    const result = getTranslation(config, 'unknown', 'button.save');
+    expect(result.isError).toBe(true);
   });
 });
 

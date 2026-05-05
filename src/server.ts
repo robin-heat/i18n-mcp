@@ -17,6 +17,7 @@ import {
   checkTranslationIntegrity,
   deleteTranslation,
   findUntranslatedValues,
+  getTranslation,
   getTranslations,
 } from './tools.js';
 
@@ -29,6 +30,20 @@ const server = new Server(
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
+    {
+      name: 'get_translation',
+      description:
+        'Get the translations for a single key across all locales. ' +
+        'Use this for targeted lookups — get_translations returns the entire namespace which is too large for inline spot-checks.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          namespace: { type: 'string', description: 'Namespace name from .i18n-mcp.json' },
+          key: { type: 'string', description: 'Dot-notation key, e.g. "button.save"' },
+        },
+        required: ['namespace', 'key'],
+      },
+    },
     {
       name: 'get_translations',
       description:
@@ -139,6 +154,11 @@ const safeKey = z.string().min(1).refine(
   { message: 'Key contains reserved or empty segments' }
 );
 
+const GetTranslationInput = z.object({
+  namespace: z.string().min(1),
+  key: safeKey,
+});
+
 const GetTranslationsInput = z.object({
   namespace: z.string().min(1),
   query: z.string().optional(),
@@ -172,6 +192,12 @@ const CheckIntegrityInput = z.object({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   try {
+    if (name === 'get_translation') {
+      const parsed = GetTranslationInput.safeParse(args);
+      if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
+      return getTranslation(config, parsed.data.namespace, parsed.data.key);
+    }
+
     if (name === 'get_translations') {
     const parsed = GetTranslationsInput.safeParse(args);
     if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };

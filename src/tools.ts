@@ -67,6 +67,28 @@ export function getTranslations(config: Config, namespace: string, query?: strin
   return ok(JSON.stringify(result, null, 2));
 }
 
+export function getTranslation(
+  config: Config,
+  namespace: string,
+  key: string
+): ToolResult {
+  const ns = resolveNamespace(config, namespace);
+  if (!ns) return namespaceNotFound(config, namespace);
+
+  const locales = listLocales(ns.path, ns.structure);
+  const result: Record<string, string> = {};
+
+  for (const locale of locales) {
+    const flat = flattenKeys(readLocale(ns.path, locale, ns.structure));
+    if (flat[key] !== undefined) result[locale] = flat[key];
+  }
+
+  if (Object.keys(result).length === 0) {
+    return ok(`Key '${key}' not found in any locale.`);
+  }
+  return ok(JSON.stringify(result, null, 2));
+}
+
 export function addTranslation(
   config: Config,
   namespace: string,
