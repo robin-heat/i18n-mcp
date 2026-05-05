@@ -86,6 +86,24 @@ locales/
 
 All tools are available to Claude once the MCP server is running.
 
+### `get_translation`
+
+Returns translations for a single key across all locales. Faster than `get_translations` for targeted spot-checks.
+
+```
+get_translation("common", "button.save")
+// → { "en": "Save", "de": "Speichern" }
+```
+
+### `get_namespace_keys`
+
+Returns a sorted list of all dot-notation keys in a namespace without values. Use to plan batch translation work without loading full locale content.
+
+```
+get_namespace_keys("common")
+// → ["button.cancel", "button.save", "title"]
+```
+
 ### `get_translations`
 
 Returns all keys for a namespace as `{ "key.path": { "en": "...", "de": "..." } }`.
@@ -117,6 +135,9 @@ add_multiple_translations("common", [
   { key: "button.save",   translations: { en: "Save",   de: "Speichern" } },
   { key: "button.cancel", translations: { en: "Cancel", de: "Abbrechen" } }
 ])
+
+// Only write "de" even if other locales are provided:
+add_multiple_translations("common", [...], ["de"])
 ```
 
 ### `delete_translation`
@@ -137,6 +158,22 @@ find_untranslated_values("web", "de")     // one locale
 ```
 
 Returns `{ locale: { key: primaryValue } }` for each stale entry found.
+
+### `check_translation_quality`
+
+Checks specific keys for quality issues across all non-primary locales. Returns issues per locale per key: `untranslated` (value identical to primary), `empty` (missing or blank), `short` (< 30% of primary value length for strings longer than 15 chars). Terms in `doNotTranslate` are excluded from the `untranslated` check.
+
+```
+check_translation_quality("web", ["header.title", "onboarding.description"])
+```
+
+### `copy_from_primary`
+
+Copies the primary locale value verbatim to specified locales for specified keys. Use for brand names, units, prices, and other terms that should not be translated. Returns an error if any key is missing from the primary locale.
+
+```
+copy_from_primary("common", ["brand.name", "unit.percent"], ["de", "fr"])
+```
 
 ### `check_translation_integrity`
 

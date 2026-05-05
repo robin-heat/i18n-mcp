@@ -19,13 +19,22 @@ Note any missing keys, extra keys, or empty values — these give context for th
 
 ## 2. Search before adding
 
-Before adding any new key, check if a similar one already exists:
+Before adding any new key, check if a similar one already exists.
 
+To look up a specific known key:
+```
+get_translation("namespace", "exact.key.path")
+```
+
+To see all keys in a namespace without loading values (useful for planning batch work):
+```
+get_namespace_keys("namespace")
+```
+
+To search by key pattern or value substring:
 ```
 get_translations("namespace", "your search term")
 ```
-
-Use a glob if you know the key structure (`button.*`), or a plain word to search across all locale values (`"save"`).
 
 ## 3. Add with all locales at once
 
@@ -67,11 +76,19 @@ Read `.i18n-mcp.json` and CLAUDE.md for:
 
 ## 5. Verify coverage before finishing
 
-Run both checks when done:
+Run these checks when done:
 
 ```
 check_translation_integrity("namespace")
 find_untranslated_values("namespace")
+check_translation_quality("namespace", ["key.one", "key.two"])
 ```
 
-`check_translation_integrity` catches missing or extra keys. `find_untranslated_values` catches keys that exist in every locale but still hold the primary locale's value — placeholder translations that were never actually translated. Fix any issues before finishing.
+- `check_translation_integrity` — missing or extra keys
+- `find_untranslated_values` — keys that exist in every locale but still hold the primary value
+- `check_translation_quality` — targeted check for untranslated, empty, or suspiciously short values on specific keys
+
+For keys that legitimately should not be translated (brand names, units, prices), copy the primary value verbatim:
+```
+copy_from_primary("namespace", ["brand.name", "unit.percent"], ["de", "fr", "es"])
+```
