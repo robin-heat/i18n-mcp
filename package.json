@@ -3,6 +3,11 @@
   "version": "0.1.1",
   "description": "MCP server for managing i18n JSON translation files",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/robin-heat/i18n-mcp.git"
+  },
+  "homepage": "https://github.com/robin-heat/i18n-mcp#readme",
   "type": "module",
   "files": [
     "dist/",

@@ -1,5 +1,7 @@
 # i18n-mcp
 
+[![npm](https://img.shields.io/npm/v/@robinheat/i18n-mcp)](https://www.npmjs.com/package/@robinheat/i18n-mcp)
+
 > **Vibe coded project** — built fast, works well, but may have rough edges. Missing a feature or hit a bug? [Open an issue](https://github.com/robinheat/i18n-mcp/issues) — contributions welcome.
 
 MCP server for managing i18n JSON translation files. Gives Claude structured read/write access to your translation files — add keys, check coverage, find duplicates — without ever leaving your editor.
