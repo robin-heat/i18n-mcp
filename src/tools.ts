@@ -118,14 +118,18 @@ export function addTranslation(
 export function addMultipleTranslations(
   config: Config,
   namespace: string,
-  entries: Array<{ key: string; translations: Record<string, string> }>
+  entries: Array<{ key: string; translations: Record<string, string> }>,
+  locales?: string[]
 ): ToolResult {
   const ns = resolveNamespace(config, namespace);
   if (!ns) return namespaceNotFound(config, namespace);
 
   const allLocales = new Set<string>();
   for (const { translations } of entries) {
-    for (const locale of Object.keys(translations)) allLocales.add(locale);
+    for (const locale of Object.keys(translations)) {
+      if (locales && !locales.includes(locale)) continue;
+      allLocales.add(locale);
+    }
   }
 
   const localeData: Record<string, Record<string, unknown>> = {};
@@ -135,6 +139,7 @@ export function addMultipleTranslations(
 
   for (const { key, translations } of entries) {
     for (const [locale, value] of Object.entries(translations)) {
+      if (locales && !locales.includes(locale)) continue;
       localeData[locale] = setNestedValue(localeData[locale], key, value);
     }
   }

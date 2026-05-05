@@ -156,6 +156,26 @@ describe('addMultipleTranslations', () => {
     ]);
     expect(result.isError).toBe(true);
   });
+
+  it('only writes locales included in the locales filter', () => {
+    addMultipleTranslations(config, 'common', [
+      { key: 'filtered.key', translations: { en: 'English', de: 'Deutsch' } },
+    ], ['de']);
+    const result = getTranslations(config, 'common', 'filtered.key');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['filtered.key']['de']).toBe('Deutsch');
+    expect(data['filtered.key']['en']).toBeUndefined();
+  });
+
+  it('writes all locales when no filter is provided', () => {
+    addMultipleTranslations(config, 'common', [
+      { key: 'unfiltered.key', translations: { en: 'English', de: 'Deutsch' } },
+    ]);
+    const result = getTranslations(config, 'common', 'unfiltered.key');
+    const data = JSON.parse(result.content[0].text);
+    expect(data['unfiltered.key']['en']).toBe('English');
+    expect(data['unfiltered.key']['de']).toBe('Deutsch');
+  });
 });
 
 describe('deleteTranslation', () => {

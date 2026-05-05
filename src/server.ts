@@ -99,7 +99,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       description:
         'Add or update multiple translation keys in one operation. ' +
         'More efficient than repeated add_translation calls — writes once per locale file. ' +
-        'Prefer this for bulk work.',
+        'Prefer this for bulk work. ' +
+        'Optional locales filter restricts which locales are written, even if translations for other locales are provided in the entries.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -114,6 +115,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
               },
               required: ['key', 'translations'],
             },
+          },
+          locales: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Only write these locales — others in translations are ignored (optional)',
           },
         },
         required: ['namespace', 'entries'],
@@ -212,6 +218,7 @@ const AddTranslationInput = z.object({
 const AddMultipleTranslationsInput = z.object({
   namespace: z.string().min(1),
   entries: z.array(z.object({ key: safeKey, translations: z.record(z.string()) })).min(1),
+  locales: z.array(z.string().min(1)).optional(),
 });
 
 const DeleteTranslationInput = z.object({
@@ -263,7 +270,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === 'add_multiple_translations') {
       const parsed = AddMultipleTranslationsInput.safeParse(args);
       if (!parsed.success) return { content: [{ type: 'text', text: parsed.error.message }], isError: true };
-      return addMultipleTranslations(config, parsed.data.namespace, parsed.data.entries);
+      return addMultipleTranslations(config, parsed.data.namespace, parsed.data.entries, parsed.data.locales);
     }
 
     if (name === 'delete_translation') {
